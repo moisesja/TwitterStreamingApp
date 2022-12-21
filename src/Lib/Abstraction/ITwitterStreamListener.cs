@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines the behavior of a Twitter Stream Listener
 /// </summary>
-public interface IStreamListener
+public interface ITwitterStreamListener
 {
     /// <summary>
     /// Starts listening for a Stream of Twits

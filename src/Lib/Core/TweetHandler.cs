@@ -1,10 +1,15 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using TwitterStreamingLib.Abstraction;
 
 namespace TwitterStreamingLib.Core;
 
 public class TweetHandler : ITweetHandler
 {
+    private readonly ILogger<TweetHandler> _logger;
+    private readonly ITweetRepository _repository;
+
     //private readonly TweeterAnalysis _tweeterAnalysis;
 
     /// <summary>
@@ -31,18 +36,45 @@ public class TweetHandler : ITweetHandler
         _tweeterAnalysis = tweeterAnalysis;
     }*/
 
-    public TweetHandler()
+    public TweetHandler(ILogger<TweetHandler> logger, ITweetRepository repository)
 	{
+        _logger = logger;
+        _repository = repository;
 	}
 
-    public Task HandleTweetAsync(string tweetJson)
+    public async Task HandleTweetAsync(string tweetJson)
     {
         if (string.IsNullOrWhiteSpace(tweetJson))
         {
             throw new ArgumentNullException("tweetJson", "The tweetJson parameter can't be null or empty.");    
         }
 
-        throw new NotImplementedException();
+        var tweetIdentifier = await _repository.InsertAsync(tweetJson);
+
+        // Load Json object
+        var tweetNode = JsonNode.Parse(tweetJson);
+
+        var contents = tweetNode?["data"]?["text"]?.ToString();
+
+        if (string.IsNullOrWhiteSpace(contents))
+        {
+            // TODO: Create a parse specific exception rather than this generic exception. 
+            throw new ApplicationException("Unable to retrieve contents from the Tweet Json");
+        }
+
+        var hashtagMatches = GetHashtags(contents);
+
+        if (hashtagMatches.Count == 0)
+        {
+            // Flag that no tags were found on this tweet
+            await _repository.FlagTweetContainsNoTags(tweetIdentifier);
+        }
+        else
+        {
+            foreach (Match match in hashtagMatches)
+            {
+                await _repository.PersistHashValueAsync(tweetIdentifier, match.Value);
+            }
+        }
     }
 }
-
