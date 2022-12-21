@@ -30,6 +30,7 @@ public class TweetHandlerUnitTests
 
     [Theory]
     [InlineData("{\"data\":{\"edit_history_tweet_ids\":[\"1605594247092117505\"],\"id\":\"1605594247092117505\",\"text\":\"RT @ST0NEHENGE: Winter solstice: The science behind the shortest day of the year https://t.co/UhH0ZER2b4\"}}")]
+    [InlineData("{\"data\":{\"edit_history_tweet_ids\":[\"1605662735873761283\"],\"id\":\"1605662735873761283\",\"text\":\"@kohei__forgive こちらこそありがとうございます😊\\n痩せる痩せるサギで全く痩せられてないので、参考にさせて頂きます✨\"}}")]
     public async Task Test_HandleTweetAsync_NoHashtag(string tweet)
     {
         var (handler, repositoryMock) = CreatetTweetHandler();

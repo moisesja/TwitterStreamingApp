@@ -10,8 +10,6 @@ public class TweetHandler : ITweetHandler
     private readonly ILogger<TweetHandler> _logger;
     private readonly ITweetRepository _repository;
 
-    //private readonly TweeterAnalysis _tweeterAnalysis;
-
     /// <summary>
     /// https://stackoverflow.com/questions/36895543/which-characters-are-allowed-in-hashtags
     /// </summary>
@@ -30,12 +28,6 @@ public class TweetHandler : ITweetHandler
         return hashtagRegex.Matches(text);
     }
 
-    /*
-    public TweetHandler(TweeterAnalysis tweeterAnalysis)
-    {
-        _tweeterAnalysis = tweeterAnalysis;
-    }*/
-
     public TweetHandler(ILogger<TweetHandler> logger, ITweetRepository repository)
 	{
         _logger = logger;
@@ -44,6 +36,7 @@ public class TweetHandler : ITweetHandler
 
     public async Task HandleTweetAsync(string tweetJson)
     {
+        // TODO: Add logging
         if (string.IsNullOrWhiteSpace(tweetJson))
         {
             throw new ArgumentNullException("tweetJson", "The tweetJson parameter can't be null or empty.");    
