@@ -8,7 +8,7 @@ using TwitterStreamingLib.Configuration;
 using TwitterStreamingLib.Core;
 using TwitterStreamingLib.DataStructures;
 
-namespace TwitterStreamConsole;
+namespace TwitterStreamingConsole;
 
 public class Program
 {
@@ -27,8 +27,13 @@ public class Program
         services.AddSingleton<ListenerConfiguration>(listenerConfiguration);
 
         // This section needs to be a singleton because the in-memory management of the data
-        services.AddSingleton<HashtagAppearances>();
-        services.AddSingleton<ITweetRepository, TweetRepository>();
+        var hashtagAppearances = new HashtagAppearances();
+        services.AddSingleton<HashtagAppearances>(hashtagAppearances);
+
+        // Need to instantiate so we can refer to the same object but with different behaviors
+        var agreggatedService = new TweetRepository(hashtagAppearances);
+        services.AddSingleton<ITweetRepository>(agreggatedService);
+        services.AddSingleton<ITwitterAnalysis>(agreggatedService);
 
         // Instantiate and configure HttpClient
         var httpClient = new HttpClient();
@@ -38,11 +43,10 @@ public class Program
         // Regular transient - instantiate, dispose as many times as necessary. In this case only once.
         services.AddTransient<ITweetHandler, TweetHandler>();
         services.AddTransient<ITwitterStreamListener, TwitterStreamListener>();
+        services.AddTransient<ConsoleReporting>();
     }
 
-    
-
-    static async Task Main(string[] args)
+    private static IHost Startup()
     {
         var builder = new ConfigurationBuilder();
         BuildConfig(builder);
@@ -57,16 +61,39 @@ public class Program
 
         Log.Logger.Information("Starting Application...");
 
-        var host = Host.CreateDefaultBuilder()
+        return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
                 RegisterCustomServices(services, configuration);
             })
             .UseSerilog()
             .Build();
+    }
+
+    
+    static async Task Main(string[] args)
+    {
+        var host = Startup();
 
         var listener = host.Services.GetService<ITwitterStreamListener>();
-        await listener.ListenAsync();
+        
+        var reporting = host.Services.GetService<ConsoleReporting>();
+        
+
+        Task[] taskArray = new Task[2];
+
+        
+        taskArray[0] = await Task.Factory.StartNew(async () =>
+        {
+            await listener.ListenAsync();
+        });
+
+        taskArray[1] = Task.Factory.StartNew(() =>
+        {
+            reporting.ReportStatistics();
+        });
+
+        Task.WaitAll(taskArray);
 
         Log.Logger.Information("Application Shutdown.");
     }
