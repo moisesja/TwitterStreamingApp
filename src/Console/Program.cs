@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using TwitterStreamingLib.Abstraction;
 using TwitterStreamingLib.Configuration;
@@ -24,12 +25,7 @@ public class Program
         var listenerConfiguration = new ListenerConfiguration(configuration);
         services.AddSingleton<ListenerConfiguration>(listenerConfiguration);
 
-        // This section needs to be a singleton because the in-memory management of the data
-        services.AddSingleton<HashtagAppearances>();
-        services.AddSingleton<ITweetRepository, TweetRepository>();
-
-        services.AddTransient<ITweetHandler, TweetHandler>();
-        services.AddTransient<ITwitterStreamListener, TwitterStreamListener>();
+        
     }
 
     */
@@ -47,9 +43,25 @@ public class Program
             .WriteTo.Console()
             .CreateLogger();
 
-//        var listener = serviceProvider.GetService<ITwitterStreamListener>();
-  //      await listener.ListenAsync();
+        Log.Logger.Information("Starting Application...");
 
-        Console.WriteLine("Done!!!");
+        var host = Host.CreateDefaultBuilder()
+            .ConfigureServices((context, services) =>
+            {
+                // This section needs to be a singleton because the in-memory management of the data
+                services.AddSingleton<HashtagAppearances>();
+                services.AddSingleton<ITweetRepository, TweetRepository>();
+
+                // Regular transient - instantiate, dispose as many times as necessary. In this case only once.
+                services.AddTransient<ITweetHandler, TweetHandler>();
+                services.AddTransient<ITwitterStreamListener, TwitterStreamListener>();
+            })
+            .UseSerilog()
+            .Build();
+
+        var listener = host.Services.GetService<ITwitterStreamListener>();
+        await listener.ListenAsync();
+
+        Log.Logger.Information("Application Shutdown.");
     }
 }

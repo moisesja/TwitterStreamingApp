@@ -29,6 +29,8 @@ namespace TwitterStreamingLib.Core
         {
             try
             {
+                _logger.LogInformation("Beginning to Listen");
+
                 const string API_URI = "https://api.twitter.com/2/tweets/sample/stream";
 
                 // Periodically the stream will be closed by the streaming service. This maybe caused by several reasons.
@@ -40,6 +42,7 @@ namespace TwitterStreamingLib.Core
 
                 await retryPolicy.ExecuteAsync(async () =>
                 {
+                    _logger.LogInformation("Executing the retry policy");
                     using (var stream = await _httpClient.GetStreamAsync(API_URI, this.CancellationToken))
                     {
                         using (var reader = new StreamReader(stream))
@@ -52,13 +55,17 @@ namespace TwitterStreamingLib.Core
                                 line = await reader.ReadLineAsync();
                             }
 
+                            _logger.LogInformation("Twitter just closed its stream to us.");
                             throw new OperationCanceledException("Twitter has stopped the streaming connection.");
                         }
                     }
                 });
+
+                _logger.LogInformation("Ended the Listen routine.");
             }
             catch (Exception exc)
             {
+                _logger.LogError("The Listen routine just ran into a problem. {exc}", exc);
                 throw new ApplicationException("Error ocurred while Listening for Twitter Streamed Data.", exc);
             }
         }
