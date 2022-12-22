@@ -92,4 +92,14 @@ public class HashtagAppearances
             return 0;
         }
     }
+
+    internal int GetNumberOfPositions()
+    {
+        return _positionHashesLinkedList.Count;
+    }
+
+    internal LinkedListNode<PositionHashes> GetLastPositionNode()
+    {
+        return _positionHashesLinkedList.Last;
+    }
 }

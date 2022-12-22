@@ -11,7 +11,7 @@ namespace TwitterStreamingLib.Core;
 /// Additional Note:
 /// This service must be consumed as a singleton, and thus care must be taken to avoid Data Races and allow for thread-safety
 /// </summary>
-public class TweetRepository : ITweetRepository
+public class TweetRepository : ITweetRepository, ITwitterAnalysis
 {
     private long _tweetsCount = 0;
     private long _tweetsWithNoHashesCount = 0;
@@ -26,6 +26,8 @@ public class TweetRepository : ITweetRepository
     {
         _hashtagAppearances = hashtagAppearances;
     }
+
+    #region ITweetRepository
 
     /// <summary>
     /// This method follows a typical Insert Repository pattern where the method returns a record identity. In this case
@@ -65,12 +67,55 @@ public class TweetRepository : ITweetRepository
         }
     }
 
-    /*
-    public long GetTweetCount()
+    #endregion
+
+    #region ITwitterAnalysis
+
+    public long GetTweetsCount()
     {
-        return _tweetCount;
+        lock (_resouce)
+        {
+            return _tweetsCount;
+        }
     }
 
+    public IDictionary<int, HashSet<string>> GetTop10Hashtags()
+    {
+        lock (_resouce)
+        {
+            if (_hashtagAppearances.GetNumberOfPositions() == 0)
+            {
+                return new Dictionary<int, HashSet<string>>(0);
+            }
+
+            var result = new Dictionary<int, HashSet<string>>(10);
+
+            var node = _hashtagAppearances.GetLastPositionNode();
+
+            var counter = 1;
+
+            while (node != null || counter <= 10)
+            {
+                result.Add(node.Value.Position, node.Value.HashTags);
+                node = node.Previous;
+            }
+
+            return result;
+        }
+    }
+
+    public long GetCountOfTweetsWithNoHashtag()
+    {
+        lock (_resouce)
+        {
+            return _tweetsWithNoHashesCount;
+        }
+    }
+
+    #endregion
+
+    /*
+    
     public ICollection<HashtagCount> GetTop10Hashtags()
     {
         if (_linkedHashtags.Count == 0)

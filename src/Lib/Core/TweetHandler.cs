@@ -37,7 +37,8 @@ public class TweetHandler : ITweetHandler
     /// <inheritdoc/>
     public void HandleTweet(string tweetJson)
     {
-        // TODO: Add logging
+        _logger.LogDebug("Handling tweet {tweetJson}", tweetJson);
+
         if (string.IsNullOrWhiteSpace(tweetJson))
         {
             throw new ArgumentNullException("tweetJson", "The tweetJson parameter can't be null or empty.");    

@@ -11,13 +11,13 @@ public interface ITwitterAnalysis
     /// Gets the count of all processed tweets
     /// </summary>
     /// <returns></returns>
-    long GetTweetCount();
+    long GetTweetsCount();
 
     /// <summary>
     /// Lists top repeating hashtags
     /// </summary>
     /// <returns></returns>
-    ICollection<HashtagCounter> GetTop10Hashtags();
+    IDictionary<int, HashSet<string>> GetTop10Hashtags();
 
     /// <summary>
     /// Number of tweets where no hashtag was detected
