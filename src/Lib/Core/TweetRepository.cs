@@ -17,7 +17,6 @@ public class TweetRepository : ITweetRepository, ITwitterAnalysis
     private long _tweetsCount = 0;
     private long _tweetsWithNoHashesCount = 0;
 
-    private readonly ILogger<TweetRepository> _logger;
     private readonly HashtagAppearances _hashtagAppearances;
 
     /// <summary>
@@ -27,9 +26,7 @@ public class TweetRepository : ITweetRepository, ITwitterAnalysis
 
     public TweetRepository(HashtagAppearances hashtagAppearances)
     {
-        //_logger = logger;
         _hashtagAppearances = hashtagAppearances;
-        //_logger.LogInformation("Hashcode for hastagAppearances {GetHashCode}", hashtagAppearances.GetHashCode());
     }
 
     #region ITweetRepository
