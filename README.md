@@ -14,10 +14,8 @@ It makes use of the Twitter APIs V2 for a sample of tweets.
 * Edit the appsettings.json file and add the BearerToken value. Since this is a secret, please request it from the owner of this repo.
 * Use the CLI under src/Console and run:
 <!-- Bash script block -->
-
 ```bash
     dotnet run
-    
 ```
 
 
