@@ -25,4 +25,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Lib\TwitterStreamingLib.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="DataStructures\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DataStructures\" />
+  </ItemGroup>
 </Project>

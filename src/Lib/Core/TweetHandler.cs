@@ -34,7 +34,8 @@ public class TweetHandler : ITweetHandler
         _repository = repository;
 	}
 
-    public async Task HandleTweetAsync(string tweetJson)
+    /// <inheritdoc/>
+    public void HandleTweet(string tweetJson)
     {
         // TODO: Add logging
         if (string.IsNullOrWhiteSpace(tweetJson))
@@ -42,7 +43,7 @@ public class TweetHandler : ITweetHandler
             throw new ArgumentNullException("tweetJson", "The tweetJson parameter can't be null or empty.");    
         }
 
-        var tweetIdentifier = await _repository.InsertAsync(tweetJson);
+        var tweetIdentifier = _repository.Insert(tweetJson);
 
         // Load Json object
         var tweetNode = JsonNode.Parse(tweetJson);
@@ -60,13 +61,13 @@ public class TweetHandler : ITweetHandler
         if (hashtagMatches.Count == 0)
         {
             // Flag that no tags were found on this tweet
-            await _repository.FlagTweetContainsNoTags(tweetIdentifier);
+            _repository.FlagTweetContainsNoTags(tweetIdentifier);
         }
         else
         {
             foreach (Match match in hashtagMatches)
             {
-                await _repository.PersistHashValueAsync(tweetIdentifier, match.Value);
+                _repository.PersistHashValue(tweetIdentifier, match.Value);
             }
         }
     }

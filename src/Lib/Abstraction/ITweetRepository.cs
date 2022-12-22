@@ -5,9 +5,9 @@
 /// </summary>
 public interface ITweetRepository
 {
-    Task<Guid> InsertAsync(string tweetJson);
+    Guid Insert(string tweetJson);
 
-    Task FlagTweetContainsNoTags(Guid tweetIdentifier);
+    void FlagTweetContainsNoTags(Guid tweetIdentifier);
 
-    Task PersistHashValueAsync(Guid tweetIdentifier, string value);
+    void PersistHashValue(Guid tweetIdentifier, string value);
 }
