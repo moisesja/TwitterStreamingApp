@@ -25,11 +25,11 @@ namespace TwitterStreamingConsole
 
                 foreach (var item in popularTags)
                 {
-                    Console.WriteLine($"Position {item.Key}:");
+                    Console.WriteLine($"Number of appearances {item.Key}:");
 
                     foreach (var tag in item.Value)
                     {
-                        Console.WriteLine($"\t{tag}:");
+                        Console.WriteLine($"\t{tag}");
                     }
                 }
             }

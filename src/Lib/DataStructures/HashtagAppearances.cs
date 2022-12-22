@@ -23,12 +23,6 @@ public class HashtagAppearances
     {
         _hashtagNodesDictionary = new();
         _positionHashesLinkedList = new();
-
-        // Let's create the first node with position of 1
-        _positionHashesLinkedList.AddFirst(new PositionHashes()
-        {
-            Position = 1
-        });
     }
 
     internal void AddHashtag(string hashtag)
@@ -42,6 +36,15 @@ public class HashtagAppearances
             {
                 // Get the first item of linklist (already created)
                 var node = _positionHashesLinkedList.First;
+
+                if (node == null)
+                {
+                    // Let's create the first node with position of 1
+                    node = _positionHashesLinkedList.AddFirst(new PositionHashes()
+                    {
+                        Position = 1
+                    });
+                }
 
                 // Add the tag to the list of tags inside that position
                 node.Value.HashTags.Add(cleanHashtag);

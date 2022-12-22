@@ -1,4 +1,5 @@
-﻿using TwitterStreamingLib.Abstraction;
+﻿using Microsoft.Extensions.Logging;
+using TwitterStreamingLib.Abstraction;
 using TwitterStreamingLib.DataStructures;
 
 namespace TwitterStreamingLib.Core;
@@ -15,6 +16,8 @@ public class TweetRepository : ITweetRepository, ITwitterAnalysis
 {
     private long _tweetsCount = 0;
     private long _tweetsWithNoHashesCount = 0;
+
+    private readonly ILogger<TweetRepository> _logger;
     private readonly HashtagAppearances _hashtagAppearances;
 
     /// <summary>
@@ -24,7 +27,9 @@ public class TweetRepository : ITweetRepository, ITwitterAnalysis
 
     public TweetRepository(HashtagAppearances hashtagAppearances)
     {
+        //_logger = logger;
         _hashtagAppearances = hashtagAppearances;
+        //_logger.LogInformation("Hashcode for hastagAppearances {GetHashCode}", hashtagAppearances.GetHashCode());
     }
 
     #region ITweetRepository
@@ -94,9 +99,14 @@ public class TweetRepository : ITweetRepository, ITwitterAnalysis
 
             var counter = 1;
 
-            while (node != null || counter <= 10)
+            while (node != null && counter <= 10)
             {
-                result.Add(node.Value.Position, node.Value.HashTags);
+                // We will not count those tags that appear only once as they produce way too much noise
+                if (node.Value.Position > 1 && node.Value.HashTags.Count > 0)
+                {
+                    result.Add(node.Value.Position, node.Value.HashTags);
+                    counter++;
+                }
                 node = node.Previous;
             }
 

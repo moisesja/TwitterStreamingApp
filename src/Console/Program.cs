@@ -28,6 +28,8 @@ public class Program
 
         // This section needs to be a singleton because the in-memory management of the data
         var hashtagAppearances = new HashtagAppearances();
+
+        Log.Logger.Information("Hashcode for hastagAppearances {GetHashCode}", hashtagAppearances.GetHashCode());
         services.AddSingleton<HashtagAppearances>(hashtagAppearances);
 
         // Need to instantiate so we can refer to the same object but with different behaviors
