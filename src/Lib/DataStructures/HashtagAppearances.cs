@@ -68,4 +68,16 @@ internal class HashtagAppearances
             _hashtagNodesDictionary[cleanHashtag] = nextPositionNode;
         }
     }
+
+    public int GetNumberOfAppearances(string hashtag)
+    {
+        var cleanHashtag = hashtag.Trim();
+
+        if (_hashtagNodesDictionary.ContainsKey(cleanHashtag))
+        {
+            return _hashtagNodesDictionary[cleanHashtag].Value.Position;
+        }
+
+        return 0;
+    }
 }
