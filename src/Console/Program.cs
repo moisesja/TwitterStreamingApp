@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -19,16 +20,27 @@ public class Program
             .AddEnvironmentVariables();
     }
 
-    /*
-    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    
+    private static void RegisterCustomServices(IServiceCollection services, IConfiguration configuration)
     {
         var listenerConfiguration = new ListenerConfiguration(configuration);
         services.AddSingleton<ListenerConfiguration>(listenerConfiguration);
 
-        
+        // This section needs to be a singleton because the in-memory management of the data
+        services.AddSingleton<HashtagAppearances>();
+        services.AddSingleton<ITweetRepository, TweetRepository>();
+
+        // Instantiate and configure HttpClient
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization = new("Bearer", listenerConfiguration.BearerToken);
+        services.AddSingleton<HttpClient>(httpClient);
+
+        // Regular transient - instantiate, dispose as many times as necessary. In this case only once.
+        services.AddTransient<ITweetHandler, TweetHandler>();
+        services.AddTransient<ITwitterStreamListener, TwitterStreamListener>();
     }
 
-    */
+    
 
     static async Task Main(string[] args)
     {
@@ -48,13 +60,7 @@ public class Program
         var host = Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
-                // This section needs to be a singleton because the in-memory management of the data
-                services.AddSingleton<HashtagAppearances>();
-                services.AddSingleton<ITweetRepository, TweetRepository>();
-
-                // Regular transient - instantiate, dispose as many times as necessary. In this case only once.
-                services.AddTransient<ITweetHandler, TweetHandler>();
-                services.AddTransient<ITwitterStreamListener, TwitterStreamListener>();
+                RegisterCustomServices(services, configuration);
             })
             .UseSerilog()
             .Build();
