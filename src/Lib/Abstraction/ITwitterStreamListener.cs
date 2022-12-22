@@ -8,12 +8,11 @@ public interface ITwitterStreamListener
     /// <summary>
     /// Starts listening for a Stream of Twits
     /// </summary>
-    Task StartListeningAsync();
+    Task ListenAsync();
 
     /// <summary>
-    /// 
+    /// Allows for the interruption of the listener
     /// </summary>
-    /// <returns></returns>
-    Task StopListeningAsync();
+    CancellationToken CancellationToken { get; set; }
 }
 

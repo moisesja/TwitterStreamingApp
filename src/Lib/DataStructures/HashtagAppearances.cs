@@ -6,12 +6,18 @@
 /// just to increase its appearance count.
 /// With this data structure we know how many times a certain group of tags appear without incurring to a linear O(n) complexity.
 /// Hashsets and Dictionaries make it possible.
+/// Additional Note:
+/// This service must be consumed as a singleton, and thus care must be taken to avoid Data Races and allow for thread-safety
 /// </summary>
-internal class HashtagAppearances
+public class HashtagAppearances
 {
     private readonly LinkedList<PositionHashes> _positionHashesLinkedList;
-
     private readonly Dictionary<string, LinkedListNode<PositionHashes>> _hashtagNodesDictionary;
+
+    /// <summary>
+    /// This resource gets locked for all calls to make sure there is data corruption due to contingent threads
+    /// </summary>
+    private object _resouce = new();
 
     public HashtagAppearances()
     {
@@ -25,59 +31,65 @@ internal class HashtagAppearances
         });
     }
 
-    public void AddHashtag(string hashtag)
+    internal void AddHashtag(string hashtag)
     {
-        var cleanHashtag = hashtag.Trim();
-
-        // When this is the first time we see this tag
-        if (!_hashtagNodesDictionary.ContainsKey(cleanHashtag))
+        lock (_resouce)
         {
-            // Get the first item of linklist (already created)
-            var node = _positionHashesLinkedList.First;
+            var cleanHashtag = hashtag.Trim();
 
-            // Add the tag to the list of tags inside that position
-            node.Value.HashTags.Add(cleanHashtag);
-
-            // Point the dictionary entry to the position node
-            _hashtagNodesDictionary.Add(cleanHashtag, node);
-        }
-        // We've seen this tag before
-        else
-        {
-            // Get its position node (number of appearances)
-            var currentPositionNode = _hashtagNodesDictionary[cleanHashtag];
-
-            // Get the next position
-            var nextPositionNode = currentPositionNode.Next;
-
-            if (nextPositionNode == null)
+            // When this is the first time we see this tag
+            if (!_hashtagNodesDictionary.ContainsKey(cleanHashtag))
             {
-                nextPositionNode = _positionHashesLinkedList.AddLast(new PositionHashes()
-                {
-                    Position = currentPositionNode.Value.Position + 1
-                });
+                // Get the first item of linklist (already created)
+                var node = _positionHashesLinkedList.First;
+
+                // Add the tag to the list of tags inside that position
+                node.Value.HashTags.Add(cleanHashtag);
+
+                // Point the dictionary entry to the position node
+                _hashtagNodesDictionary.Add(cleanHashtag, node);
             }
+            // We've seen this tag before
+            else
+            {
+                // Get its position node (number of appearances)
+                var currentPositionNode = _hashtagNodesDictionary[cleanHashtag];
 
-            // Remove from current position
-            currentPositionNode.Value.HashTags.Remove(cleanHashtag);
+                // Get the next position
+                var nextPositionNode = currentPositionNode.Next;
 
-            // Add to the next node's hashes
-            nextPositionNode.Value.HashTags.Add(cleanHashtag);
+                if (nextPositionNode == null)
+                {
+                    nextPositionNode = _positionHashesLinkedList.AddLast(new PositionHashes()
+                    {
+                        Position = currentPositionNode.Value.Position + 1
+                    });
+                }
 
-            // Repoint master list
-            _hashtagNodesDictionary[cleanHashtag] = nextPositionNode;
+                // Remove from current position
+                currentPositionNode.Value.HashTags.Remove(cleanHashtag);
+
+                // Add to the next node's hashes
+                nextPositionNode.Value.HashTags.Add(cleanHashtag);
+
+                // Repoint master list
+                _hashtagNodesDictionary[cleanHashtag] = nextPositionNode;
+            }
         }
     }
 
-    public int GetNumberOfAppearances(string hashtag)
+    internal int GetNumberOfAppearances(string hashtag)
     {
-        var cleanHashtag = hashtag.Trim();
-
-        if (_hashtagNodesDictionary.ContainsKey(cleanHashtag))
+        lock (_resouce)
         {
-            return _hashtagNodesDictionary[cleanHashtag].Value.Position;
-        }
+            var cleanHashtag = hashtag.Trim();
 
-        return 0;
+            if (_hashtagNodesDictionary.ContainsKey(cleanHashtag))
+            {
+                return _hashtagNodesDictionary[cleanHashtag].Value.Position;
+            }
+
+            return 0;
+        }
     }
 }

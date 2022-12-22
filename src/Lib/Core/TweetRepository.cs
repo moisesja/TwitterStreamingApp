@@ -11,20 +11,21 @@ namespace TwitterStreamingLib.Core;
 /// Additional Note:
 /// This service must be consumed as a singleton, and thus care must be taken to avoid Data Races and allow for thread-safety
 /// </summary>
-public class TwitterAnalysis : ITweetRepository, ITwitterAnalysis
+public class TweetRepository : ITweetRepository
 {
-    private readonly LinkedList<HashtagCounter> _linkedHashtags = new();
-    private readonly Dictionary<string, LinkedListNode<HashtagCounter>> _dictionary = new();
-
     private long _tweetsCount = 0;
     private long _tweetsWithNoHashesCount = 0;
+    private readonly HashtagAppearances _hashtagAppearances;
 
     /// <summary>
     /// This resource gets locked for all calls to make sure there is data corruption due to contingent threads
     /// </summary>
     private object _resouce = new();
 
-    #region ITweetRepository
+    public TweetRepository(HashtagAppearances hashtagAppearances)
+    {
+        _hashtagAppearances = hashtagAppearances;
+    }
 
     /// <summary>
     /// This method follows a typical Insert Repository pattern where the method returns a record identity. In this case
@@ -38,7 +39,7 @@ public class TwitterAnalysis : ITweetRepository, ITwitterAnalysis
         {
             _tweetsCount++;
             return Guid.NewGuid();
-        }   
+        } 
     }
 
     /// <summary>
@@ -48,68 +49,26 @@ public class TwitterAnalysis : ITweetRepository, ITwitterAnalysis
     /// <param name="value">Hashtag Value</param>
     public void PersistHashValue(Guid tweetIdentifier, string value)
     {
+        // This method is thread-safe
+        _hashtagAppearances.AddHashtag(value);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="tweetIdentifier">Not used, but declared for when data is truly persisted</param>
+    public void FlagTweetContainsNoTags(Guid tweetIdentifier)
+    {
         lock (_resouce)
         {
-            if (_dictionary.ContainsKey(value))
-            {
-                var node = _dictionary[value];
-                node.Value.Instances++;
-
-                // 
-                _linkedHashtags.Remove(node);
-                _linkedHashtags.AddFirst(node);
-            }
-            else
-            {
-                var hashtagCount = new HashtagCounter(value)
-                {
-                    Instances = 1
-                };
-
-                var node = _linkedHashtags.AddLast(hashtagCount);
-                _dictionary.Add(value, node);
-            }
+            _tweetsWithNoHashesCount++;
         }
     }
 
-    public void FlagTweetContainsNoTags(Guid tweetIdentifier)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
-    #region ITwitterAnalysis
-
-    public long GetCountOfTweetsWithNoHashtag()
-    {
-        throw new NotImplementedException();
-    }
-
-    public ICollection<HashtagCounter> GetTop10Hashtags()
-    {
-        throw new NotImplementedException();
-    }
-
-    public long GetTweetCount()
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
     /*
-     
-
-    
     public long GetTweetCount()
     {
         return _tweetCount;
-    }
-
-    public void AddHashtag(string hashtag)
-    {
-        
     }
 
     public ICollection<HashtagCount> GetTop10Hashtags()
