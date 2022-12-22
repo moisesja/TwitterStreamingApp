@@ -98,11 +98,17 @@ public class HashtagAppearances
 
     internal int GetNumberOfPositions()
     {
-        return _positionHashesLinkedList.Count;
+        lock (_resouce)
+        {
+            return _positionHashesLinkedList.Count;
+        }
     }
 
     internal LinkedListNode<PositionHashes> GetLastPositionNode()
     {
-        return _positionHashesLinkedList.Last;
+        lock (_resouce)
+        {
+            return _positionHashesLinkedList.Last;
+        }
     }
 }
