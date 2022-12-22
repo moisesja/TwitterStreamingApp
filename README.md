@@ -25,7 +25,7 @@ It makes use of the Twitter APIs V2 for a sample of tweets.
 ```bash
     docker build -t twitterstreamingappimg -f ./Console/Dockerfile .
 ``` 
-    * Once the Docker image is built. run: 
+* Once the Docker image is built. run: 
 
 <!-- Bash script block -->
 ```bash
