@@ -40,7 +40,7 @@ namespace TwitterStreamingLib.Core
 
                 await retryPolicy.ExecuteAsync(async () =>
                 {
-                    _logger.LogInformation("Inviking the Stream API through a Retry Policy");
+                    _logger.LogInformation("Invoking the Stream API through a Retry Policy.");
 
                     using (var stream = await _httpClient.GetStreamAsync(API_URI, cancellationTokenSource.Token))
                     {
