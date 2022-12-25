@@ -12,11 +12,13 @@ namespace TwitterStreamingConsole
 			_twitterAnalysis = twitterAnalysis;
         }
 
-		public void ReportStatistics()
+		public void ReportStatistics(CancellationToken cancellationToken)
 		{
-            while (true)
+            // Wait until the Streaming starts working
+            Thread.Sleep(1000);
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                Thread.Sleep(1000);
                 Console.WriteLine($"Number of received Tweets: {_twitterAnalysis.GetTweetsCount()}");
                 Console.WriteLine($"Number of Tweets with no tags: {_twitterAnalysis.GetCountOfTweetsWithNoHashtag()}");
 
@@ -32,6 +34,9 @@ namespace TwitterStreamingConsole
                         Console.WriteLine($"\t{tag}");
                     }
                 }
+
+                // Refresh stats every second
+                Thread.Sleep(1000);
             }
         }
 	}

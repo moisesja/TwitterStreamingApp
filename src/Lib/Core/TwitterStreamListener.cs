@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Threading;
+using Microsoft.Extensions.Logging;
 using Polly;
 using TwitterStreamingLib.Abstraction;
 using TwitterStreamingLib.Configuration;
@@ -22,10 +23,7 @@ namespace TwitterStreamingLib.Core
         }
 
         /// <inheritdoc/>
-        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
-
-        /// <inheritdoc/>
-        public async Task ListenAsync()
+        public async Task ListenAsync(CancellationTokenSource cancellationTokenSource)
         {
             try
             {
@@ -42,12 +40,13 @@ namespace TwitterStreamingLib.Core
 
                 await retryPolicy.ExecuteAsync(async () =>
                 {
-                    _logger.LogInformation("Executing the retry policy");
-                    using (var stream = await _httpClient.GetStreamAsync(API_URI, this.CancellationToken))
+                    _logger.LogInformation("Inviking the Stream API through a Retry Policy");
+
+                    using (var stream = await _httpClient.GetStreamAsync(API_URI, cancellationTokenSource.Token))
                     {
                         using (var reader = new StreamReader(stream))
                         {
-                            var line = await reader.ReadLineAsync();
+                            var line = await reader.ReadLineAsync(cancellationTokenSource.Token);
 
                             while (!string.IsNullOrWhiteSpace(line))
                             {
@@ -65,6 +64,7 @@ namespace TwitterStreamingLib.Core
             }
             catch (Exception exc)
             {
+                cancellationTokenSource.Cancel();
                 _logger.LogError("The Listen routine just ran into a problem. {exc}", exc);
                 throw new ApplicationException("Error ocurred while Listening for Twitter Streamed Data.", exc);
             }

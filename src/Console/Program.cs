@@ -80,22 +80,43 @@ public class Program
         var listener = host.Services.GetService<ITwitterStreamListener>();
         
         var reporting = host.Services.GetService<ConsoleReporting>();
-        
 
-        Task[] taskArray = new Task[2];
-
-        
-        taskArray[0] = await Task.Factory.StartNew(async () =>
+        // Define the cancellation token that will govern over both tasks
+        using (CancellationTokenSource source = new())
         {
-            await listener.ListenAsync();
-        });
+            CancellationToken token = source.Token;
 
-        taskArray[1] = Task.Factory.StartNew(() =>
-        {
-            reporting.ReportStatistics();
-        });
+            TaskFactory factory = new(token);
 
-        Task.WaitAll(taskArray);
+            // Prepare 2 tasks
+            var taskArray = new Task[2];
+
+            taskArray[0] = await factory.StartNew(async () =>
+            {
+                await listener.ListenAsync(source);
+            }, token);
+
+            taskArray[1] = factory.StartNew(() =>
+            {
+                reporting.ReportStatistics(token);
+            }, token);
+
+            try
+            {
+                Task.WaitAll(taskArray);
+            }
+            catch (AggregateException ae)
+            {
+                foreach (Exception e in ae.InnerExceptions)
+                {
+                    if (e is TaskCanceledException)
+                        Console.WriteLine("Unable to Stream Tweets: {0}",
+                           ((TaskCanceledException)e).Message);
+                    else
+                        Console.WriteLine("Exception: " + e.Message);
+                }
+            }
+        }
 
         Log.Logger.Information("Application Shutdown.");
     }
